@@ -177,7 +177,7 @@ All features are enabled by default.
 There will be no comparisons with other XML parsers since they do not parse SVG data.
 And no comparisons with other SVG parsers, since there are no such\*.
 
-Note that most of the time is spend in a string to number and a number to string conversions.
+Note that most of the time is spent in a string to number and a number to string conversions.
 
 It's still not as fast as I want, but here are some stats using *resave* example:
 
