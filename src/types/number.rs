@@ -7,7 +7,10 @@ use std::cmp;
 
 use float_cmp::ApproxEqUlps;
 
-use {WriteOptions, WriteBuffer};
+use {
+    WriteBuffer,
+    WriteOptions,
+};
 
 /// The trait for comparing f64 numbers.
 pub trait FuzzyEq {
@@ -18,6 +21,12 @@ pub trait FuzzyEq {
     #[inline]
     fn fuzzy_ne(&self, other: &f64) -> bool {
         !self.fuzzy_eq(other)
+    }
+
+    /// Returns `true` if number is zero.
+    #[inline]
+    fn is_fuzzy_zero(&self) -> bool {
+        self.fuzzy_eq(&0.0)
     }
 }
 

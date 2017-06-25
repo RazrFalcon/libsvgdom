@@ -2,19 +2,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::f64;
 use std::fmt;
 use std::ops::Mul;
-use std::f64;
-
-use {WriteOptions, WriteBuffer, WriteToString};
-use super::number::{write_num, FuzzyEq};
 
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Tokenize, Error as ParseError};
+use svgparser::{
+    Error as ParseError,
+    TextFrame,
+    Tokenize,
+};
 
-/// Representation of the`<transform>` type.
+use {
+    WriteBuffer,
+    WriteOptions,
+    WriteToString,
+};
+use super::number::{
+    write_num,
+    FuzzyEq,
+};
+
+/// Representation of the [`<transform>`] type.
+///
+/// [`<transform>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 #[derive(Debug,Clone,Copy,PartialEq)]
 #[allow(missing_docs)]
 pub struct Transform {
@@ -374,9 +387,13 @@ mod tests {
             fn $name() {
                 let doc = Document::from_str($text).unwrap();
                 let svg = doc.root().first_child().unwrap();
-                match svg.attribute_value(AId::Transform).unwrap() {
-                    AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
-                    _ => unreachable!(),
+
+                let attrs = svg.attributes();
+                if let Some(av) = attrs.get_value(AId::Transform) {
+                    match *av {
+                        AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
+                        _ => unreachable!(),
+                    }
                 }
             }
         )

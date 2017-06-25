@@ -2,7 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use {Node, ElementType, ElementId, AttributeId, AttributeValue};
+use {
+    AttributeId,
+    AttributeValue,
+    ElementId,
+    ElementType,
+    Node,
+};
 use types::Length;
 
 /// Fix `rect` element attributes.
@@ -175,8 +181,12 @@ pub fn fix_stop_attributes(node: &Node) {
     let mut prev_offset = 0.0;
 
     for child in node.children() {
-        // TODO: 'offset' must be resolved
-        let mut offset = *child.attribute_value(AttributeId::Offset).unwrap().as_number().unwrap();
+        let av = child.attributes().get_value(AttributeId::Offset).cloned();
+
+        let mut offset = match av {
+            Some(AttributeValue::Number(n)) => n,
+            _ => unreachable!("'offset' must be resolved"),
+        };
 
         if offset < 0.0 {
             offset = 0.0;
@@ -188,7 +198,7 @@ pub fn fix_stop_attributes(node: &Node) {
             offset = prev_offset;
         }
 
-        child.set_attribute(AttributeId::Offset, offset);
+        child.set_attribute((AttributeId::Offset, offset));
 
         prev_offset = offset;
     }
@@ -240,24 +250,22 @@ fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
     if node.has_attribute(id) {
         fix_negative_len(node, id, new_len);
     } else {
-        node.set_attribute(id, new_len);
+        node.set_attribute((id, new_len));
     }
 }
 
 fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
-    if let Some(av) = node.attribute_value(id) {
-        // unwrap is safe, because coordinates must have a Length type
-        let l = av.as_length().unwrap();
+    let av = node.attributes().get_value(id).cloned();
+    if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {
-            node.set_attribute(id, new_len);
+            node.set_attribute((id, new_len));
         }
     }
 }
 
 fn rm_negative_len(node: &Node, id: AttributeId) {
-    if let Some(av) = node.attribute_value(id) {
-        // unwrap is safe, because coordinates must have a Length type
-        let l = av.as_length().unwrap();
+    let av = node.attributes().get_value(id).cloned();
+    if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {
             node.remove_attribute(id);
         }

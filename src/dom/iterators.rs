@@ -5,11 +5,14 @@
 use std::cell::Ref;
 use std::iter::Filter;
 
-use super::node::Node;
+use {
+    Node,
+    NodeType,
+};
 use super::node_data::WeakLink;
-use super::node_type::NodeType;
 
-// TODO: maybe can be implemented as template or trait
+// TODO: maybe can be implemented as a trait
+// TODO: return ElementId with Node
 macro_rules! filter_svg {
     ($name:ty) => (
         impl $name {
@@ -38,7 +41,9 @@ pub enum NodeEdge {
     End(Node),
 }
 
-/// An iterator of `Node`s to a given node and its descendants, in tree order.
+/// An iterator of [`Node`]s to a given node and its descendants, in tree order.
+///
+/// [`Node`]: struct.Node.html
 #[derive(Clone)]
 pub struct Traverse {
     root: Node,
@@ -46,7 +51,7 @@ pub struct Traverse {
 }
 
 impl Traverse {
-    /// Constructs a new Traverse iterator.
+    /// Constructs a new `Traverse` iterator.
     pub fn new(node: &Node) -> Traverse {
         Traverse {
             root: node.clone(),
@@ -97,11 +102,13 @@ impl Iterator for Traverse {
     }
 }
 
-/// An iterator of `Node`s to a given node and its descendants, in tree order.
+/// An iterator of [`Node`]s to a given node and its descendants, in tree order.
+///
+/// [`Node`]: struct.Node.html
 pub struct Descendants(Traverse);
 
 impl Descendants {
-    /// Constructs a new Descendants iterator.
+    /// Constructs a new `Descendants` iterator.
     pub fn new(node: &Node) -> Descendants {
         Descendants(node.traverse())
     }
@@ -127,11 +134,13 @@ impl Iterator for Descendants {
 
 filter_svg!(Descendants);
 
-/// An iterator of `Node`s to the children of a given node.
+/// An iterator of [`Node`]s to the children of a given node.
+///
+/// [`Node`]: struct.Node.html
 pub struct Children(Option<Node>);
 
 impl Children {
-    /// Constructs a new Children iterator.
+    /// Constructs a new `Children` iterator.
     pub fn new(node: Option<Node>) -> Children {
         Children(node)
     }
@@ -156,11 +165,13 @@ impl Iterator for Children {
 
 filter_svg!(Children);
 
-/// An iterator of `Node`s to the parents of a given node.
+/// An iterator of [`Node`]s to the parents of a given node.
+///
+/// [`Node`]: struct.Node.html
 pub struct Parents(Option<Node>);
 
 impl Parents {
-    /// Constructs a new Children iterator.
+    /// Constructs a new `Parents` iterator.
     pub fn new(node: Option<Node>) -> Parents {
         Parents(node)
     }
@@ -196,7 +207,7 @@ pub struct LinkedNodes<'a> {
 }
 
 impl<'a> LinkedNodes<'a> {
-    /// Constructs a new LinkedNodes iterator.
+    /// Constructs a new `LinkedNodes` iterator.
     pub fn new(data: Ref<'a, Vec<WeakLink>>) -> LinkedNodes<'a> {
         LinkedNodes {
             data: data,

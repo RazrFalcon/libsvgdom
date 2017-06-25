@@ -5,9 +5,15 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, AttributeValue, Error, WriteToString, WriteOptions};
-use svgdom::AttributeId as AId;
-use svgdom::ElementId as EId;
+use svgdom::{
+    AttributeId as AId,
+    AttributeValue,
+    Document,
+    ElementId as EId,
+    Error,
+    WriteOptions,
+    WriteToString,
+};
 
 #[test]
 fn linked_attributes_1() {
@@ -20,7 +26,7 @@ fn linked_attributes_1() {
 
     n2.set_id("2");
 
-    n1.set_link_attribute(AId::XlinkHref, n2.clone()).unwrap();
+    n1.set_attribute((AId::XlinkHref, n2.clone()));
 
     assert_eq!(n1.is_used(), false);
     assert_eq!(n2.is_used(), true);
@@ -40,10 +46,10 @@ fn linked_attributes_2() {
     doc.root().append(&n1);
     doc.root().append(&n2);
 
-    n1.set_link_attribute(AId::XlinkHref, n2.clone()).unwrap();
+    n1.set_attribute((AId::XlinkHref, n2.clone()));
 
     // recursion error
-    assert_eq!(n2.set_link_attribute(AId::XlinkHref, n1.clone()).unwrap_err(),
+    assert_eq!(n2.set_attribute_checked((AId::XlinkHref, n1.clone())).unwrap_err(),
                Error::ElementCrosslink);
 }
 
@@ -61,7 +67,7 @@ fn linked_attributes_3() {
         n1.set_id("1");
         n2.set_id("2");
 
-        n1.set_link_attribute(AId::XlinkHref, n2.clone()).unwrap();
+        n1.set_attribute((AId::XlinkHref, n2.clone()));
 
         assert_eq!(n1.is_used(), false);
         assert_eq!(n2.is_used(), true);
@@ -94,7 +100,7 @@ fn linked_attributes_4() {
         n1.set_id("1");
         n2.set_id("2");
 
-        n1.set_link_attribute(AId::XlinkHref, n2.clone()).unwrap();
+        n1.set_attribute((AId::XlinkHref, n2.clone()));
 
         assert_eq!(n1.is_used(), false);
         assert_eq!(n2.is_used(), true);
@@ -127,10 +133,10 @@ fn linked_attributes_5() {
 
     // no matter how many times we insert/clone/link same node,
     // amount of linked nodes in n1 must be 1
-    n2.set_link_attribute(AId::Fill, n1.clone()).unwrap();
-    n2.set_link_attribute(AId::Fill, n1.clone()).unwrap();
-    n2.set_link_attribute(AId::Fill, n1.clone()).unwrap();
-    n2.set_link_attribute(AId::Fill, n1.clone()).unwrap();
+    n2.set_attribute((AId::Fill, n1.clone()));
+    n2.set_attribute((AId::Fill, n1.clone()));
+    n2.set_attribute((AId::Fill, n1.clone()));
+    n2.set_attribute((AId::Fill, n1.clone()));
 
     assert_eq!(n1.is_used(), true);
     assert_eq!(n2.is_used(), false);
@@ -143,10 +149,10 @@ fn attributes_must_be_uniq() {
     let doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    n.set_attribute(AId::Fill, "red");
-    n.set_attribute(AId::Fill, "green");
+    n.set_attribute((AId::Fill, "red"));
+    n.set_attribute((AId::Fill, "green"));
 
-    assert_eq!(n.attribute_value(AId::Fill).unwrap(), AttributeValue::from("green"));
+    assert_eq!(n.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::from("green"));
     assert_eq!(n.attributes().len(), 1);
 }
 
@@ -155,19 +161,9 @@ fn attributes_compare_1() {
     let doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    n.set_attribute(AId::StrokeWidth, 1.0);
+    n.set_attribute((AId::StrokeWidth, 1.0));
 
-    assert_eq!(n.attribute_value(AId::StrokeWidth).unwrap(), AttributeValue::from(1.0));
-}
-
-#[test]
-fn attributes_compare_2() {
-    let doc = Document::new();
-    let n = doc.create_element(EId::Svg);
-
-    n.set_attribute(AId::StrokeWidth, 1.0);
-
-    assert_eq!(n.has_attribute_with_value(AId::StrokeWidth, 1.0), true);
+    assert_eq!(n.attributes().get_value(AId::StrokeWidth).unwrap(), &AttributeValue::from(1.0));
 }
 
 #[test]
@@ -175,7 +171,7 @@ fn attributes_exist_1() {
     let doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    n.set_attribute(AId::StrokeWidth, 1.0);
+    n.set_attribute((AId::StrokeWidth, 1.0));
 
     assert_eq!(n.has_attribute(AId::StrokeWidth), true);
 }
@@ -185,7 +181,7 @@ fn attributes_exist_2() {
     let doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    n.set_attribute(AId::StrokeWidth, 1.0);
+    n.set_attribute((AId::StrokeWidth, 1.0));
 
     assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id(AId::StrokeWidth)).is_some(), true);
 }
@@ -195,7 +191,7 @@ fn remove_attribute_1() {
     let doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    n.set_attribute(AId::StrokeWidth, 1.0);
+    n.set_attribute((AId::StrokeWidth, 1.0));
     assert_eq!(n.has_attribute(AId::StrokeWidth), true);
 
     n.remove_attribute(AId::StrokeWidth);
@@ -415,4 +411,70 @@ fn deep_copy_3() {
     </g>
 </svg>
 ");
+}
+
+#[test]
+fn set_attr_1() {
+    use svgdom::Attribute;
+
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::X, 1.0));
+    assert_eq!(rect.attributes().get(AId::X).unwrap().to_string(), "x=\"1\"");
+
+    rect.set_attribute(("attr", 1.0));
+    assert_eq!(rect.attributes().get("attr").unwrap().to_string(), "attr=\"1\"");
+
+    let attr = Attribute::new(AId::Y, 1.0);
+    rect.set_attribute(attr);
+    assert_eq!(rect.attributes().get(AId::Y).unwrap().to_string(), "y=\"1\"");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+    assert_eq!(rect.attributes().get(AId::XlinkHref).unwrap().to_string(), "xlink:href=\"#rect2\"");
+}
+
+#[test]
+#[should_panic]
+fn set_attr_2() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+    let attr = rect.attributes().get(AId::XlinkHref).cloned().unwrap();
+
+    // must panic
+    rect.attributes_mut().insert(attr);
+}
+
+#[test]
+#[should_panic]
+fn remove_attr_1() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+
+    // must panic
+    rect.attributes_mut().remove(AId::XlinkHref);
+}
+
+#[test]
+#[should_panic]
+fn remove_attr_2() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+
+    // must panic
+    rect.attributes_mut().retain(|a| !a.has_id(AId::XlinkHref));
 }

@@ -2,7 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use {Document, Node, AttributeId, Attribute, AttributeValue, ValueId};
+use {
+    Attribute,
+    AttributeId,
+    AttributeValue,
+    Document,
+    Node,
+    ValueId,
+};
 
 // TODO: split
 /// Resolve `inherit` and `currentColor` attributes.
@@ -43,8 +50,9 @@ pub fn resolve_inherit(doc: &Document) {
         }
 
         for id in &vec_curr_color {
-            if let Some(av) = node.attribute_value(AttributeId::Color) {
-                node.set_attribute(*id, av);
+            let av = node.attributes().get_value(AttributeId::Color).cloned();
+            if let Some(av) = av {
+                node.set_attribute((*id, av.clone()));
             } else {
                 resolve_impl(&node, *id, AttributeId::Color);
             }
@@ -54,14 +62,16 @@ pub fn resolve_inherit(doc: &Document) {
 
 fn resolve_impl(node: &Node, curr_attr: AttributeId, parent_attr: AttributeId) {
     if let Some(n) = node.parents().find(|n| n.has_attribute(parent_attr)) {
-        let av = n.attribute_value(parent_attr).unwrap();
-        node.set_attribute(curr_attr, av);
+        let av = n.attributes().get_value(parent_attr).cloned();
+        if let Some(av) = av {
+            node.set_attribute((curr_attr, av.clone()));
+        }
     } else {
         match Attribute::default(curr_attr) {
-            Some(a) => node.set_attribute(curr_attr, a.value),
+            Some(a) => node.set_attribute((curr_attr, a.value)),
             None => {
                 warnln!("Failed to resolve attribute: {}. Removing it.",
-                        node.attribute(curr_attr).unwrap());
+                        node.attributes().get(curr_attr).unwrap());
                 node.remove_attribute(curr_attr);
             }
         }

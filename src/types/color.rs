@@ -4,14 +4,24 @@
 
 use std::fmt;
 
-use {WriteOptions, WriteBuffer, WriteToString};
-
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Color as ParserColor, Error as ParseError};
+use svgparser::{
+    Color as ParserColor,
+    Error as ParseError,
+    TextFrame,
+};
 
-/// Representation of the `<color>` type.
+use {
+    WriteBuffer,
+    WriteOptions,
+    WriteToString,
+};
+
+/// Representation of the [`<color>`] type.
+///
+/// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Clone,Copy,PartialEq,Debug)]
 pub struct Color {
     #[allow(missing_docs)]
@@ -49,8 +59,8 @@ fn int2hex(n: u8) -> (u8, u8) {
 
 impl WriteBuffer for Color {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        // TODO: next release: rgb() support
-        // TODO: next release: color name support
+        // TODO: rgb() support
+        // TODO: color name support
 
         buf.push(b'#');
         let (r1, r2) = int2hex(self.red);

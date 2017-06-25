@@ -9,7 +9,10 @@ use std::rc::Rc;
 #[cfg(feature = "parsing")]
 use parser::parse_svg;
 #[cfg(feature = "parsing")]
-use {ParseOptions, Error};
+use {
+    ParseOptions,
+    Error,
+};
 
 use writer;
 use {
@@ -21,14 +24,19 @@ use {
     WriteBuffer,
     WriteOptions,
     WriteToString,
+    Children,
+    Descendants,
+    Node,
+    NodeType,
+};
+use super::node_data::{
+    Link,
+    NodeData,
 };
 
-use super::iterators::{Children, Descendants};
-use super::node::Node;
-use super::node_data::{Link, NodeData};
-use super::node_type::NodeType;
-
-/// Container of [`Node`](struct.Node.html)s.
+/// Container of [`Node`]s.
+///
+/// [`Node`]: struct.Node.html
 pub struct Document {
     /// Root node.
     pub root: Node,
@@ -42,26 +50,33 @@ impl Document {
         }
     }
 
-    /// Constructs a new `Document` from the text using a default `ParseOptions`.
+    /// Constructs a new `Document` from the text using a default [`ParseOptions`].
+    ///
+    /// [`ParseOptions`]: struct.ParseOptions.html
     #[cfg(feature = "parsing")]
     pub fn from_str(text: &str) -> Result<Document, Error> {
         // TODO: to FromStr trait
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
 
-    /// Constructs a new `Document` from the text using a supplied `ParseOptions`.
+    /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
+    ///
+    /// [`ParseOptions`]: struct.ParseOptions.html
     #[cfg(feature = "parsing")]
     pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
         parse_svg(text, opt)
     }
 
-    /// Constructs a new `Node` with `Element` type.
+    /// Constructs a new [`Node`] with [`NodeType`]::Element type.
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
     ///
     /// # Panics
     ///
     /// Panics if a string tag name is empty.
+    ///
+    /// [`Node`]: struct.Node.html
+    /// [`NodeType`]: enum.NodeType.html
     pub fn create_element<'a, T>(&self, tag_name: T) -> Node
         where TagNameRef<'a>: From<T>
     {
@@ -75,11 +90,14 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(tn), String::new())
     }
 
-    /// Constructs a new `Node` using the supplied `NodeType`.
+    /// Constructs a new [`Node`] using the supplied [`NodeType`].
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
     ///
     /// This method should be used for any non-element nodes.
+    ///
+    /// [`Node`]: struct.Node.html
+    /// [`NodeType`]: enum.NodeType.html
     pub fn create_node(&self, node_type: NodeType, text: &str) -> Node {
         // TODO: use Into<String> trait
 
@@ -87,21 +105,25 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), node_type, None, text.to_owned())
     }
 
-    /// Returns the root `Node`.
+    /// Returns the root [`Node`].
+    ///
+    /// [`Node`]: struct.Node.html
     pub fn root(&self) -> Node {
         self.root.clone()
     }
 
-    /// Returns the first child of the root `Node`.
+    /// Returns the first child of the root [`Node`].
     ///
     /// # Panics
     ///
     /// Panics if the root node is currently mutability borrowed.
+    ///
+    /// [`Node`]: struct.Node.html
     pub fn first_child(&self) -> Option<Node> {
         self.root().first_child()
     }
 
-    /// Returns the first child with `svg` tag name of the root `Node`.
+    /// Returns the first child with `svg` tag name of the root [`Node`].
     ///
     /// In most of the cases result of this method and `first_element_child()` will be the same,
     /// but an additional check may be helpful.
@@ -118,6 +140,8 @@ impl Document {
     ///
     /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```
+    ///
+    /// [`Node`]: struct.Node.html
     pub fn svg_element(&self) -> Option<Node> {
         for n in self.root.children().svg() {
             if n.is_tag_name(ElementId::Svg) {
@@ -179,7 +203,7 @@ impl Document {
             parent: None,
             first_child: None,
             last_child: None,
-            previous_sibling: None,
+            prev_sibling: None,
             next_sibling: None,
             node_type: node_type,
             tag_name: tag_name.map(TagName::from),

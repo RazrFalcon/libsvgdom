@@ -4,18 +4,27 @@
 
 use std::fmt;
 
-use types::LengthUnit;
-use {WriteOptions, WriteBuffer, WriteToString};
-
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{Stream, TextFrame, Error as ParseError};
+use svgparser::{
+    Error as ParseError,
+    Stream,
+    TextFrame,
+};
+
+use {
+    WriteBuffer,
+    WriteOptions,
+    WriteToString,
+};
+use types::LengthUnit;
 
 /// Representation of the [`<length>`] type.
-/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 ///
 /// We use own struct and not one from svgparser, because of traits.
+///
+/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub struct Length {
