@@ -69,6 +69,9 @@ mod attribute_type;
 mod attribute_value;
 mod attributes;
 
+#[cfg(feature = "rocket-support")]
+mod rocket;
+
 
 pub use attribute::*;
 pub use attribute_type::AttributeType;

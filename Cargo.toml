@@ -20,6 +20,11 @@ slab = "0.4.0"
 #svgtypes = "0.1.1"
 svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "a794d41" }
 
+[dependencies.rocket]
+version = "0.3.12"
+default-features = false
+optional = true
+
 [dev-dependencies]
 time = "0.1"
 bencher = "0.1"
@@ -31,3 +36,6 @@ harness = false
 
 [lib]
 doctest = true
+
+[features]
+rocket-support = ["rocket"]
